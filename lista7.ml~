@@ -1,0 +1,19 @@
+(* zad 3 *)
+
+type 'a drzewo = Lisc of 'a | Wezel of 'a drzewo * 'a drzewo;;
+
+let tree: 'a drzewo = Wezel(Wezel(Lisc 1, Lisc 2), Wezel(Lisc 3, Lisc 4));;
+let subTree: 'a drzewo = Wezel(Lisc 1, Lisc 2);;
+
+let rec isSubTree treeA treeB =
+  let rec isSubTreeRec sub tre =
+    match (sub, tre) with
+      (Lisc x :: tlx, Lisc y :: tly) when x = y -> isSubTreeRec tlx tly
+    | (Lisc x :: [], Lisc y ::[]) when x=y -> true
+    | (Wezel(leftx, rightx)::tlx, Wezel(lefty,righty)::tly) -> isSubTreeRec [leftx] [lefty] || isSubTreeRec [rightx] [righty] ||  isSubTreeRec tlx tly
+    | (Wezel(leftx, rightx)::[], Wezel(lefty,righty)::[]) -> isSubTreeRec [leftx] [lefty] || isSubTreeRec [rightx] [righty]
+    | (_,_) -> false
+  in isSubTreeRec [treeA] [treeB];;
+
+
+isSubTree subTree tree;;

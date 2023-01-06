@@ -1,0 +1,22 @@
+let rec func2 list =
+  if list = [] then raise (Failure"pusta lista")
+  else let rec funcRecPow n potega lista listaWynikowa =
+         match (n, lista) with
+         | (_, []) -> List.rev listaWynikowa
+         | (0, hd :: tl) -> funcRecPow (potega) (potega+1) tl listaWynikowa
+         | (i, hd :: tl) when i=(potega-1) -> funcRecPow (i-1) potega (hd :: tl) (hd :: listaWynikowa)
+         | (i, hd :: tl) ->  funcRecPow (i-1) potega (hd :: tl) ((hd *. List.hd listaWynikowa) :: listaWynikowa)
+       in funcRecPow 1 2 list [];;
+
+
+func2 [1.;2.;5.;10.];;
+
+
+let functionY x = 2*.x +. 5.
+
+let poleFunction func a b dx =
+  if (a >= b) then raise (Failure"zle a i b")
+  else if (dx <=0) then raise (Failure "ujmeny dx")
+  else if ( abs_float(a-.b) < dx) then raise (Failure" zly dx")
+  else 
+  

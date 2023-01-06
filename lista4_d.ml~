@@ -1,0 +1,8 @@
+let silnia' n =
+let rec f(i,s) = if i<n then f(i+1,(i+1)*s) else (i,s)
+in snd (f(0,1));;
+(*snd znaczy chyba ze zwraca w koncowym etapie drugi element tylko*)
+
+silnia' 5;;
+
+

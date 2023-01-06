@@ -1,0 +1,67 @@
+type 'a llist = LNil | LCons of 'a * 'a llist Lazy.t;;
+
+let rec lfrom k = LCons (k, lazy (lfrom (k+1)));;
+
+let rec toLazyList = function
+ [] -> LNil
+  | x :: xs -> LCons(x, lazy (toLazyList xs));;
+
+
+let rec ltake = function
+ (0, _) -> []
+ | (_, LNil) -> []
+ | (n, LCons(x, lazy xs)) -> x :: ltake(n-1, xs);;
+
+let f x = if x = 2 then 0 else if x=3 then 1 else if x=4 then 4 else x*x;;
+
+let rec lrepeat lazylist f =
+  if lazylist = LNil then LNil
+  else let rec repeatRec n list position =
+     match (n, list) with
+     (0., LCons(h1, lazy tl)) -> repeatRec (abs_float(floor(f(position+.1.)))) tl (position+.1.)
+    |(n, LCons(h1, lazy tl)) -> LCons(h1, lazy (repeatRec (n-.1.) (LCons(h1, lazy tl)) position))
+    |(_, LNil) -> LNil
+       in repeatRec (floor(f 1.)) lazylist 1.;;
+
+let fsin x = 3.*. sin x;;
+fsin 0.;;
+fsin 1.;;
+fsin 3.14;;
+
+let ll1 = toLazyList([1; 2; 3; 4; 5]);;
+ltake(50, (lrepeat ll1 f));;
+
+ltake(50, (lrepeat ll1 fsin));;
+
+
+type slowo = int * int;;
+type slownik = slowo list;;
+
+let s1:slowo = (5, 1);;
+let s2:slowo = (4, 1);;
+let s3:slowo = (3, 3);;
+let s4:slowo = (2, 4);;
+let s5:slowo = (1, 5);;
+let s6:slowo = (-1, 2);;
+
+let slownik1:slownik = [s1; s2; s3; s4; s5; s6];;
+
+let dodaj w s:slownik =
+  if s = [] then raise (Failure "pusty slownik")
+  else let rec dodajRec wartosc slown:slownik =
+         match slown with
+        | [] -> (wartosc, 1)::[]
+        |((war, wystapienia)::tail) -> if war = wartosc then (war, wystapienia+1)::tail
+                                       else if war < wartosc then (wartosc, 1)::(war, wystapienia):: tail
+                                       else (war, wystapienia)::dodajRec wartosc tail
+       in dodajRec w s;;
+
+
+dodaj 3 slownik1;;
+dodaj 7 slownik1;;
+dodaj 6 slownik1;;
+dodaj 0 slownik1;;
+dodaj 4 slownik1;;
+
+
+(*  |(1, LCons(h1, lazy tl)) -> (LCons(h1, lazy (repeatRec int_of_float(f (position+.1.)) tl (position+.1.)))) *)
