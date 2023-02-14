@@ -1,0 +1,183 @@
+(*Bru%wF^d*)
+
+type ordering = LT | EQ | GT;;
+
+module type ORDER=
+  sig 
+    type t
+    val compare: t -> t -> ordering
+end;;
+
+module type KOLEJKA =
+  sig
+    type key
+    type 'a tk
+    exception Pusta of string
+    val tworz_pusta: unit -> 'a tk
+    val do_kolejki: key * 'a tk -> 'a tk
+    val z_kolejki: 'a tk -> 'a tk
+    val pierwszy_element: 'a tk -> key
+    val czy_pusta: 'a tk -> bool
+    val do_listy: 'a tk -> (key * int) list
+  end;;
+
+
+module Kolejka (Key: ORDER) : KOLEJKA with type key = Key.t=
+  struct
+    type key = Key.t
+    type 'a tk = KolejkaPusta | Skladowa of key * 'a tk
+    exception Pusta of string
+
+    let tworz_pusta() = KolejkaPusta
+
+    let do_kolejki (elem, queue) = Skladowa(elem, queue)
+
+    let z_kolejki queue = 
+      match queue with
+        Skladowa(hd, tl) -> tl
+      | _ -> raise(Pusta("Kolejka jest pusta"))
+
+    let pierwszy_element queue = 
+      match queue with
+        Skladowa(hd, tl) -> hd
+      | _ -> raise(Pusta("Kolejka jest pusta"))
+
+    let czy_pusta queue = 
+      match queue with
+        KolejkaPusta -> true
+      | _ -> false
+
+    let do_listy queue =
+      let rec wstaw lst elem index=
+      match lst with
+        [] -> [(elem, index)]
+      | (he, hi)::tl -> 
+        match (Key.compare elem he) with
+          GT -> (he, hi)::(wstaw tl elem index)
+        | _ -> (elem, index)::lst
+      in
+
+      let rec insert_all k list index=
+        match k with
+          Skladowa(hd, tl) -> (insert_all tl (wstaw list hd (index)) (index + 1))
+        | KolejkaPusta -> list
+      in
+      
+      insert_all queue [] 0;;
+  end;;
+
+module Int_Order: ORDER with type t = int =
+  struct
+    type t = int
+    let compare el1 el2=
+      if el1 < el2 then LT
+      else if el1 > el2 then GT
+      else EQ
+  end;;
+
+
+module List_Order: ORDER with type t = int list =
+  struct
+    type t = int list
+
+    let rec compare el1 el2 =
+      match (el1, el2) with
+        (head1::tail1, head2::tail2) when head1 < head2 -> LT
+       | (head1::tail1, head2::tail2) when head1 > head2 -> GT
+       | (head1::tail1, head2::tail2) when head1 = head2 -> (compare tail1 tail2)
+       |_ -> EQ
+  end;;
+
+
+module Int_Kolejka = Kolejka(Int_Order);;
+
+module List_Kolejka = Kolejka(List_Order);;
+
+
+(*int kolejka*)
+
+let k1 =Int_Kolejka.(do_kolejki(4, do_kolejki(2, do_kolejki(3, do_kolejki(1, tworz_pusta())))));;
+
+Int_Kolejka.pierwszy_element k1;;  
+Int_Kolejka.(pierwszy_element (z_kolejki k1));;
+Int_Kolejka.(pierwszy_element (z_kolejki (z_kolejki k1)));;
+Int_Kolejka.(pierwszy_element (z_kolejki (z_kolejki (z_kolejki k1))));;
+
+Int_Kolejka.czy_pusta k1;;
+
+Int_Kolejka.do_listy k1;;
+
+
+(*int lista*)
+
+let k2 = List_Kolejka.(do_kolejki([1;2;3;4;5], do_kolejki([5;6;4;5;6], do_kolejki([5;4;5;6;7], do_kolejki([2;5;6;7;8], tworz_pusta())))));;
+
+List_Kolejka.pierwszy_element k2;;  
+List_Kolejka.(pierwszy_element (z_kolejki k2));;
+List_Kolejka.(pierwszy_element (z_kolejki (z_kolejki k2)));;
+List_Kolejka.(pierwszy_element (z_kolejki (z_kolejki (z_kolejki k2))));;
+
+
+List_Kolejka.do_listy k2;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(* - - -- - - *)
+module Pair_Kolejka = Kolejka(Pair_Order);;
+
+type pair = int * int;;
+
+module Pair_Order: ORDER with type t = pair =
+  struct
+    type t = pair
+    
+    let compare el1 el2 =
+      match (el1, el2) with
+        ((f1, _), (f2, _)) when f1 < f2 -> LT
+      | ((f1, _), (f2, _)) when f1 > f2 -> GT
+      | _ -> EQ
+  end;;
+
+(*Test pary*)
+
+let k2 =Pair_Kolejka.do_kolejki((4,1), Pair_Kolejka.do_kolejki((2,1), Pair_Kolejka.do_kolejki((3,67), Pair_Kolejka.do_kolejki((1,44), Pair_Kolejka.tworz_pusta()))));;
+
+Pair_Kolejka.pierwszy_element k2;;  
+Pair_Kolejka.pierwszy_element (Pair_Kolejka.z_kolejki k2);;
+Pair_Kolejka.pierwszy_element (Pair_Kolejka.z_kolejki (Pair_Kolejka.z_kolejki k2));;
+Pair_Kolejka.pierwszy_element (Pair_Kolejka.z_kolejki (Pair_Kolejka.z_kolejki (Pair_Kolejka.z_kolejki k2)));;
+
+Pair_Kolejka.czy_pusta k2;;
+
+Pair_Kolejka.do_listy k2;;

@@ -1,0 +1,146 @@
+(* zad 1*)
+
+module type QUEUE_FUN =
+sig
+ type 'a t
+ exception Empty of string
+ val empty: unit -> 'a t
+ val enqueue: 'a * 'a t -> 'a t
+ val dequeue: 'a t -> 'a t
+ val first: 'a t -> 'a
+ val isEmpty: 'a t -> bool
+end;;
+
+
+module ListQueue : QUEUE_FUN =
+  struct
+    type 'a t = 'a list
+
+    exception Empty of string
+
+    let empty () = []
+
+    let enqueue (element, queue) = queue @ [element]
+
+    let dequeue = function
+      | [] -> []
+      | head :: tail -> tail
+
+    let first = function
+      | [] -> raise (Empty"Empty Queue")
+      | head :: tail -> head
+
+    let isEmpty queue = [] = queue
+
+  end;;
+
+let queue123 = ListQueue.(enqueue(3, enqueue(2, (enqueue(1, empty())))));;
+ListQueue.first(queue123);;
+ListQueue.(isEmpty(dequeue(dequeue(dequeue(queue123)))));;
+
+
+module PairOfListsQueue : QUEUE_FUN =
+  struct
+    type 'a t = 'a list * 'a list
+
+    exception Empty of string
+
+    let empty () = ([], [])
+
+    let normalize = function
+      |([], endOfQueue) -> (List.rev endOfQueue, [])
+      | normalized -> normalized
+
+    let enqueue (element, queue) = normalize(fst queue, element :: snd queue)
+
+    let dequeue = function
+      |([], _) -> ([], [])  (* bo zawsze jest znormalizowana*)
+      |(head :: tail, endOfQueue) -> normalize(tail, endOfQueue)
+
+    let first queue =
+      match fst queue with
+      | [] -> raise (Empty"no first element - empty queue")
+      | (head :: tail) -> head
+
+    let isEmpty queue = fst queue = []
+  end;;
+
+let pairQueue123 = PairOfListsQueue.(enqueue(3, enqueue(2, (enqueue(1, empty())))));;
+PairOfListsQueue.first(pairQueue123);;
+let pairQueue234 = PairOfListsQueue.(enqueue(4, (dequeue(pairQueue123))));;
+PairOfListsQueue.first(pairQueue234);;
+PairOfListsQueue.(first(dequeue(dequeue(pairQueue234))));;
+PairOfListsQueue.(isEmpty(dequeue(dequeue(dequeue(pairQueue234)))));;
+
+(*error below*)
+PairOfListsQueue.(first(dequeue(dequeue(dequeue(pairQueue234)))));;
+
+(* zad 2*)
+
+module type QUEUE_MUT =
+sig
+ type 'a t
+ (* The type of queues containing elements of type ['a]. *)
+
+ exception Empty of string
+ (* Raised when [first q] is applied to an empty queue [q]. *)
+
+ exception Full of string
+ (* Raised when [enqueue(x,q)] is applied to a full queue [q]. *)
+
+ val empty: int -> 'a t
+ (* [empty n] returns a new queue of length [n], initially empty. *)
+
+ val enqueue: 'a * 'a t -> unit
+ (* [enqueue (x,q)] adds the element [x] at the end of a queue [q]. *)
+
+ val dequeue: 'a t -> unit
+ (* [dequeue q] removes the first element in queue [q] *)
+
+ val first: 'a t -> 'a
+ (* [first q] returns the first element in queue [q] without removing
+ it from the queue, or raises [Empty] if the queue is empty. *)
+
+ val isEmpty: 'a t -> bool
+ (* [isEmpty q] returns [true] if queue [q] is empty,
+ otherwise returns [false]. *)
+
+ val isFull: 'a t -> bool
+ (* [isFull q] returns [true] if queue [q] is full,
+ otherwise returns [false]. *)
+end;;
+
+
+module CyclicArrayQueue : QUEUE_MUT =
+  struct
+    type 'a t = { a : 'a option array; mutable f: int; mutable r:int }  (*jest to rekord*)
+    exception Empty of string
+    exception Full of string
+
+    let empty n =
+      { a = Array.make(n + 1) None; f = 0; r = 0 }
+
+    let isEmpty queue = queue.r = queue.f
+
+    let isFull queue =
+      (queue.r + 1) mod Array.length queue.a = queue.f
+
+    let enqueue (element, queue) =
+      if (isFull queue) then raise (Full "Full queue while enqueue method")
+      else
+        queue.a.(queue.r) <- Some element;
+      queue.r <- (queue.r+1) mod Array.length queue.a
+
+    let dequeue queue =
+      if(isEmpty queue) then ()
+      else
+        queue.f <- (queue.f + 1) mod Array.length queue.a
+
+    let first queue =
+      if (isEmpty queue) then raise (Empty "Empty queue while first method")
+      else (* queue.a.(queue.f)*)
+         match (queue.a.(queue.f)) with
+	| Some value -> value
+	| None ->  failwith "module CyclicArrayQueue: first (implementation error!!!)"
+
+  end;;
